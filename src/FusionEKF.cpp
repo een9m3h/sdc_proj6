@@ -92,22 +92,34 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
     cout << "EKF: " << endl;
     ekf_.x_ = VectorXd(4);
     ekf_.x_ << 1, 1, 1, 1;
+	
+	Eigen::MatrixXd MMSE_;
+	Eigen::VectorXd z_est_;
 
     if (measurement_pack.sensor_type_ == MeasurementPackage::RADAR) {
       /**
       Convert radar from polar to cartesian coordinates and initialize state.
       */
-	  ekf_.x_ << measurement_pack.raw_measurements_[0]*cos(measurement_pack.raw_measurements_[1]),
-				measurement_pack.raw_measurements_[0]*sin(measurement_pack.raw_measurements_[1]),
+	  MMSE_ = MatrixXd(3,3);
+	  MMSE_ = R_radar_;
+	  MMSE_(0,0) += 1;MMSE_(1,1) += 1;MMSE_(2,2) += 1;
+	  z_est_ = MMSE_.inverse()*measurement_pack.raw_measurements_;
+	  
+	  ekf_.x_ << z_est_[0]*cos(z_est_[1]),
+				z_est_[0]*sin(z_est_[1]),
 				0,0;
     }
     else if (measurement_pack.sensor_type_ == MeasurementPackage::LASER) {
       /**
       Initialize state.
       */
+		MMSE_ = MatrixXd(2,2);
+		MMSE_ = R_laser_;
+		MMSE_(0,0) += 1;MMSE_(1,1) += 1;
+		z_est_ = MMSE_.inverse()*measurement_pack.raw_measurements_;
 	  
-		ekf_.x_ << 	measurement_pack.raw_measurements_[0],
-					measurement_pack.raw_measurements_[1],0,0;
+		ekf_.x_ << 	z_est_[0],
+					z_est_[1],0,0;
     }
 	
 	previous_timestamp_ = measurement_pack.timestamp_;
