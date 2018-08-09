@@ -25,6 +25,8 @@ public:
   Eigen::MatrixXd R_laser_;
   Eigen::MatrixXd R_radar_;
   
+  Eigen::MatrixXd I_;
+  
 
   /**
    * Constructor
@@ -70,7 +72,7 @@ public:
   
 private:
 
-  float RangeAngle(const float phi);
+  float RangeAngle(float phi);
 
 };
 
